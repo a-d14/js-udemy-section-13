@@ -90,21 +90,65 @@ const renderError = function(err) {
 
 // getCountryAndNeighbor('usa');
 
+const getJSON = function(url, errorMsg = 'Something went wrong!') {
+    return fetch(url)
+    .then(response => {
+        if(!response.ok) throw new Error(`${errorMsg} (${response.status})`);
+        // console.log(response.json());
+        return response.json();
+    });
+};
+
 const getCountryData = function(country) {
-    fetch(`https://countries-api-836d.onrender.com/countries/name/${country}`)
-    .then(response => response.json())
+    getJSON(`https://countries-api-836d.onrender.com/countries/name/${country}`, 'Country not found')
     .then(data => {
         renderCountry(data[0]);
         const neighbor = data[0].borders?.[0];
-        if(!neighbor) return;
-        return fetch(`https://countries-api-836d.onrender.com/countries/alpha/${neighbor}`);
+        if(!neighbor) throw new Error('Country has no neighbours');
+        return getJSON(`https://countries-api-836d.onrender.com/countries/alpha/${neighbor}`, 'Country not found');
     })
-    .then(response => response.json())
     .then(data => renderCountry(data, 'neighbour'))
     .catch(err => renderError(err))
     .finally(() => countriesContainer.style.opacity = 1);
 }
 
-btn.addEventListener('click', function() {
-    getCountryData('fsfdsfdsfd');
-});
+// const getCountryData = function(country) {
+//     fetch(`https://countries-api-836d.onrender.com/countries/name/${country}`)
+//     .then(response => response.json())
+//     .then(data => {
+//         renderCountry(data[0]);
+//         const neighbor = data[0].borders?.[0];
+//         if(!neighbor) return;
+//         return fetch(`https://countries-api-836d.onrender.com/countries/alpha/${neighbor}`);
+//     })
+//     .then(response => response.json())
+//     .then(data => renderCountry(data, 'neighbour'))
+//     .catch(err => renderError(err))
+//     .finally(() => countriesContainer.style.opacity = 1);
+// }
+
+// btn.addEventListener('click', function() {
+//     getCountryData('australia');
+// });
+
+// getCountryData('australia');
+
+/***** CHALLENGE #1 *****/
+const whereAmI = function(lat, lng) {
+    fetch(`https://geocode.xyz/${lat},${lng}?geoit=json`)
+    .then(response => {
+        if(!response.ok) throw new Error(`Error in fetching data ${response.status}`);
+        return response.json();
+    })
+    .then(data => {
+        console.log(data)
+        console.log(`You are in ${data.city}, ${data.country}`);
+        getCountryData(data.country);
+    }).catch(err => {
+        console.log(err);
+    });
+}
+
+whereAmI(52.508, 13.381);
+// whereAmI(19.037, 72.873);
+// whereAmI(-33.933, 18.474);
